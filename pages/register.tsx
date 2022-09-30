@@ -2,8 +2,11 @@ import type { NextPage } from "next";
 import Link from "next/link";
 import { useState } from "react";
 import { RegisterForm } from "../types";
+import axios from "axios";
+import { useRouter } from "next/router";
 
 const Register: NextPage = () => {
+  const router = useRouter();
   const [formState, setFormState] = useState<RegisterForm>({
     username: "",
     password: "",
@@ -11,9 +14,12 @@ const Register: NextPage = () => {
     lastName: "",
   });
 
-  const sendFormHandler = (e: React.FormEvent<HTMLButtonElement>) => {
+  const registerHandler = async (e: React.FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    console.log(formState);
+    const response = await axios.post("/api/register", formState);
+    if (response.status === 200) {
+      await router.push("/login");
+    }
   };
   //from-blue-400 to-purple-500 from-[#DAE2F8] to-[#D6A4A4]
   return (
@@ -76,13 +82,13 @@ const Register: NextPage = () => {
             value={formState.lastName}
           />
           <button
-            onClick={sendFormHandler}
+            onClick={registerHandler}
             className={
               "bg-green-400 text-lg font-semibold text-white border-gray-300 p-2 mt-5 rounded-lg"
             }
             type={"submit"}
           >
-            Войти
+            Зарегистрироваться
           </button>
         </form>
         <h2 className={"text-lg text-center mt-5 font-thin"}>

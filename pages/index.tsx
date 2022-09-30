@@ -1,7 +1,35 @@
 import type { NextPage } from "next";
 import Link from "next/link";
+import axios from "axios";
+import React, { useState } from "react";
+import { LoginForm } from "../types";
+import { useRouter } from "next/router";
+import { setUser } from "../store/slices/userSlice";
+import { useAppDispatch } from "../store/hooks";
 
 const Login: NextPage = () => {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const [formState, setFormState] = useState<LoginForm>({
+    username: "",
+    password: "",
+  });
+  const loginHandler = async (e: React.FormEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const response = await axios.post("/api/login", formState);
+    if (response.status === 200) {
+      dispatch(
+        setUser({
+          _id: response.data.data.user._id,
+          username: response.data.data.user.username,
+          firstName: response.data.data.user.firstName,
+          lastName: response.data.data.user.lastName,
+          loggedIn: true,
+        })
+      );
+      await router.push("/messages");
+    }
+  };
   //from-blue-400 to-purple-500 from-[#DAE2F8] to-[#D6A4A4]
   return (
     <div
@@ -24,6 +52,10 @@ const Login: NextPage = () => {
             }
             type={"text"}
             placeholder={"Имя пользователя"}
+            value={formState.username}
+            onChange={(e) =>
+              setFormState({ ...formState, username: e.target.value })
+            }
           />
           <input
             className={
@@ -31,12 +63,17 @@ const Login: NextPage = () => {
             }
             type={"password"}
             placeholder={"Пароль"}
+            value={formState.password}
+            onChange={(e) =>
+              setFormState({ ...formState, password: e.target.value })
+            }
           />
           <button
             className={
               "bg-green-400 text-lg font-semibold text-white border-gray-300 p-2 mt-5 rounded-lg"
             }
             type={"submit"}
+            onClick={loginHandler}
           >
             Войти
           </button>
