@@ -27,7 +27,7 @@ const Login: NextPage = () => {
           loggedIn: true,
         })
       );
-      await router.push("/messages");
+      await router.push(`/messages/${response.data.data.user._id}`);
     }
   };
   //from-blue-400 to-purple-500 from-[#DAE2F8] to-[#D6A4A4]

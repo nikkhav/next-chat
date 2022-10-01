@@ -17,3 +17,7 @@ export interface User {
   firstName: string;
   lastName: string;
 }
+
+export interface MessagesProps {
+  messages: String[];
+}

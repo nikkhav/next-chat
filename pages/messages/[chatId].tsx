@@ -4,49 +4,52 @@ import axios from "axios";
 import { useAppSelector } from "../../store/hooks";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
+import { MessagesProps } from "../../types";
+import connectDB from "../../mongodb/database";
+import User from "../../mongodb/models/userModel";
 let socket: any;
 
-const Messages: NextPage = () => {
-  const loggedIn = useAppSelector((state) => state.user.loggedIn);
+const Messages: NextPage<MessagesProps> = ({ messages }) => {
+  const { username, _id, firstName, lastName, loggedIn } = useAppSelector(
+    (state) => state.user
+  );
   const router = useRouter();
+  const { chatId } = router.query;
   useEffect(() => {
     if (!loggedIn) {
       router.push("/");
     }
     socketInitializer();
-  }, [loggedIn, router]);
+  });
 
   const [message, setMessage] = useState<string>("");
-  //const [messages, setMessages] = useState<string[]>([]);
-  const [messages, setMessages] = useState<string>("");
 
   const socketInitializer = async () => {
-    await axios.get("/api/socket");
+    await axios.post(`/api/socket/${chatId}`);
     socket = io();
 
     socket.on("connect", () => {
       console.log("connected");
     });
 
-    socket.on("update-message", (msg: string) => {
-      setMessages(msg);
-    });
+    // socket.on("update-message", (msg: string) => {
+    //   setMessages(msg);
+    // });
 
     return null;
+  };
+
+  const refreshData = () => {
+    router.replace(router.asPath);
   };
 
   const handleKeyPress = (e: any) => {
     if (e.key === "Enter" && message !== "") {
       socket.emit("message", message);
       setMessage("");
+      refreshData();
     }
   };
-  // const testFetch = async () => {
-  //   const res = await axios.get("/api/messages");
-  //   const data = await res.data;
-  //   console.log(data);
-  // };
-  // testFetch();
   return (
     <div>
       <div className={"flex flex-row justify-between"}>
@@ -76,10 +79,14 @@ const Messages: NextPage = () => {
             <p className={"text-xl font-light text-right"}>
               Get started by editing pages/index.tsx
             </p>
-            <p className={"text-xl font-light text-right"}>{messages}</p>
-            <p className={`${messages.length > 0 ? "message" : ""}`}>
-              {messages}
-            </p>
+            {/*<p className={`${messages.length > 0 ? "message" : ""}`}>*/}
+            {/*  {messages[0]}*/}
+            {/*</p>*/}
+            {messages.map((msg, index) => (
+              <p key={index} className={"message"}>
+                {msg}
+              </p>
+            ))}
           </div>
           <div className={"flex flex-row justify-around items-center bg-white"}>
             <input
@@ -99,6 +106,7 @@ const Messages: NextPage = () => {
                 if (message !== "") {
                   socket.emit("message", message);
                   setMessage("");
+                  refreshData();
                 }
               }}
               className={
@@ -113,5 +121,17 @@ const Messages: NextPage = () => {
     </div>
   );
 };
+
+export async function getServerSideProps(context: any) {
+  const { chatId } = context.params;
+  await connectDB();
+  const user = await User.findById(chatId);
+  const messages = user.messages;
+  return {
+    props: {
+      messages,
+    },
+  };
+}
 
 export default Messages;

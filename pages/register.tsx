@@ -18,7 +18,7 @@ const Register: NextPage = () => {
     e.preventDefault();
     const response = await axios.post("/api/register", formState);
     if (response.status === 200) {
-      await router.push("/login");
+      await router.push("/");
     }
   };
   //from-blue-400 to-purple-500 from-[#DAE2F8] to-[#D6A4A4]
